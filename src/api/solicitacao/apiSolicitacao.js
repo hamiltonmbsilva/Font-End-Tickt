@@ -16,21 +16,25 @@ export default {
         return response;
     },
 
-    // async seach(seach){
-    //     var response = await apiUtils.get(`cliente/search/${seach}`);
+    async Salvar(solicitacao){
+        //debugger
+        var response = await apiUtils.post(`solicitacao`, solicitacao);
 
-    //     return response;
-    // },
+        return response;
+    },
 
-    // async seacheCodigo(codigo){
-    //     var response = await apiUtils.get(`cliente/seacheCodigo/${codigo}`);
+    async getIdSelect(id){
+        //debugger
+        var response = await apiUtils.get(`solicitacao/${id}`);
 
-    //     return response;
-    // },
+        return response;
+    },
 
-    // async search(search){
-    //     var response = await apiUtils.get(`voucherCliente/search/${search}`);
+    async Editar(id,solicitacao){
+        //debugger
+        var response = await apiUtils.put(`solicitacao`, id, solicitacao);
 
-    //     return response;
-    // }
+        return response;
+    },
+    
 };

@@ -3,19 +3,18 @@
     <Header></Header>
         <div class="container-fluid divCadastroSolicitacao">
             <b-form @submit="onSubmit" >
-                <label class="textoCadastroSolicitacao">Cadastrar Solicitações</label>
+                <label class="textoCadastroSolicitacao">Cadastrar Andamento</label>
             </b-form>
         </div>
         <div class="row formDiv1">
                 <div class="col-md">
-                  <label class="textoCadastroSolicitacaoFiltro">Nome do Solicitacao</label>
+                  <label class="textoCadastroSolicitacaoFiltro">Data do Andamento</label>
                     <div class=" remover-spaco"> 
                       <b-form-input
                         required             
                         class="filtroSolicitacao" 
-                        type="text"
-                        v-model="nomeSolicitacao" 
-                        placeholder="Ex:Teste"  
+                        type="date"
+                        v-model="dataAndamento"                         
                        ></b-form-input> 
                     </div>
                 </div>
@@ -24,13 +23,13 @@
 
           <div class="row formDiv2">
                 <div class="col-md">
-                  <label class="textoCadastroSolicitacaoFiltro">Problema Ocorrido</label>
+                  <label class="textoCadastroSolicitacaoFiltro">Correção</label>
                     <div class=" remover-spaco">
                         <b-form-textarea
                         class="filtroSolicitacao "
                         id="textarea-state"
                         v-model="text"  
-                        rows="10"
+                        rows="05"
                         ></b-form-textarea>                      
                     </div>
                 </div>               
@@ -39,7 +38,7 @@
 
           <b-col class="botaoCadastroSolicitacao">
             <b-button class="botaoCadastroSolicitacaoEnviar" @click="onSubmit" type="reset">               
-                Cadastrar Solicitação
+                Cadastrar Andamento
             </b-button>
           </b-col>
 
@@ -47,11 +46,11 @@
     <b-modal id="modal-PopPap" ref="modalConfirmacao" size="sm" class="modalPopPap">                  
                  
       <b-col class="modalContentPopPap">
-        <label class="modalContentPopPapText">Solicitação cadastrada com Sucesso!</label> 
+        <label class="modalContentPopPapText">Andamento Cadastrado com Sucesso!</label> 
       </b-col>
       <template v-slot:modal-footer="{ ok }" class="footerModalPopPap">
         <b-col class="divModalBotaoContinuar" @click="ok()">
-            <b-button class="modalBotaoContinuar" @click="onReset" :to="{name: 'pageInicial'}">
+            <b-button class="modalBotaoContinuar" :to="{name: 'pageInicial'}">
               Continuar
             </b-button>                    
         </b-col>
@@ -67,7 +66,7 @@
       </b-col>
       <template v-slot:modal-footer="{ ok }" class="footerModalPopPap">
         <b-col class="divModalBotaoContinuar" @click="ok()">
-            <b-button class="modalBotaoContinuar" @click="onReset">
+            <b-button class="modalBotaoContinuar" >
               Continuar
             </b-button>                    
         </b-col>
@@ -79,10 +78,11 @@
 </template>
 <script>
 import Header from "../components/header";
-import SolicitacaoClienteServe from "@/api/solicitacao/apiSolicitacao";
+import AndamentoClienteServe from"@/api/andamento/apiAndamento";
 export default {
     mounted() {
-    Header;
+        Header;
+        this.pegarSolicitacao();
     },
     components: {
     Header    
@@ -90,46 +90,40 @@ export default {
 
     data() {
         return {
-            nomeSolicitacao: null,
+            dataAndamento: null,
             text: null,
-            mensagemErro:""
+            mensagemErro:"",
+            idAndamento:"",
+            IdSolicitacao:""
         }
     },
 
     methods:{
-        onReset(evt) {
-            evt.preventDefault()
-            // Reset our form values
-            this.nomeSolicitacao = null,
-            this.text = null,
         
-            this.$nextTick(() => {
-            this.show = true
-            })
-        },
+        async onSubmit(){ 
 
-        async onSubmit(){            
-            
-            if( this.nomeSolicitacao === null && this.text === null){
-            //Chamando o modal de erro
-                this.mensagemErro = "Não foi selecionado nenhum campo!"
+            if(this.dataAndamento === null && this.text === null){
+                this.mensagemErro = "Não foi preenchido nenhum campo!!!"
                 this.$refs['modalConfirmacaoErro'].show()
                 return;
-            }  
-
-            var dataAtual = new Date();
-             
-
-            var solicitacao = {
-               Solicitante: this.nomeSolicitacao,
-               DataCadastro: dataAtual.getFullYear()+'-'+(dataAtual.getMonth()+1)+'-'+dataAtual.getDate(),
-               Status: 0,
-               TextoSolicitacao: this.text
             }
+
+            var andamento = {
+               DataAndamento: this.dataAndamento,               
+               Descricao: this.text,
+               SolicitacaoId: this.IdSolicitacao
+            }
+            console.log(andamento);
             //debugger
-            SolicitacaoClienteServe.Salvar(solicitacao)
+            AndamentoClienteServe.Salvar(andamento)
             .then(resposta => { 
             console.log(resposta);
+
+                if(resposta.data.error === true){
+                    this.mensagemErro = "Não foi possivel salvar a Andamento!"
+                    this.$refs['modalConfirmacaoErro'].show()
+                    return
+                }
             
             //Chamando o modal de Sucesso           
                 this.$refs['modalConfirmacao'].show()
@@ -137,15 +131,17 @@ export default {
             })
             .catch(resposta => {
             console.log(resposta);
-            //Chamando o modal de erro
-            this.onReset()
-            this.mensagemErro = "Não foi possivel salvar a Solicitação!"
+            //Chamando o modal de erro            
+            this.mensagemErro = "Não foi possivel salvar a Andamento!"
             this.$refs['modalConfirmacaoErro'].show()
             
             })
         },
 
-        
+        pegarSolicitacao(){      
+            this.IdSolicitacao = this.$route.query.id;
+            console.log(this.IdSolicitacao);
+        },
 
 
     }

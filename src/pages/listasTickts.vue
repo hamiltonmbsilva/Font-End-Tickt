@@ -7,7 +7,7 @@
             Cadastrar nova Solicitação
         </b-button>
 
-         <div class="lista">
+    <div class="lista">
       <b-table
         responsive
         :items="solitacoes"
@@ -145,7 +145,7 @@ export default {
       var id = item.id
 
       this.$router.replace({
-        path: "/editarSolicitacao?id=" + id
+        path: "/editar?id=" + id
       });
     },
 

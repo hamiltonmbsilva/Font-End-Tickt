@@ -3,19 +3,18 @@
     <Header></Header>
         <div class="container-fluid divCadastroSolicitacao">
             <b-form @submit="onSubmit" >
-                <label class="textoCadastroSolicitacao">Cadastrar Solicitações</label>
+                <label class="textoCadastroSolicitacao">Editar Andamento</label>
             </b-form>
         </div>
         <div class="row formDiv1">
                 <div class="col-md">
-                  <label class="textoCadastroSolicitacaoFiltro">Nome do Solicitacao</label>
+                  <label class="textoCadastroSolicitacaoFiltro">Data do Andamento</label>
                     <div class=" remover-spaco"> 
                       <b-form-input
                         required             
                         class="filtroSolicitacao" 
-                        type="text"
-                        v-model="nomeSolicitacao" 
-                        placeholder="Ex:Teste"  
+                        type="date"
+                        v-model="dataAndamento"                         
                        ></b-form-input> 
                     </div>
                 </div>
@@ -24,13 +23,13 @@
 
           <div class="row formDiv2">
                 <div class="col-md">
-                  <label class="textoCadastroSolicitacaoFiltro">Problema Ocorrido</label>
+                  <label class="textoCadastroSolicitacaoFiltro">Correção</label>
                     <div class=" remover-spaco">
                         <b-form-textarea
                         class="filtroSolicitacao "
                         id="textarea-state"
                         v-model="text"  
-                        rows="10"
+                        rows="05"
                         ></b-form-textarea>                      
                     </div>
                 </div>               
@@ -47,11 +46,11 @@
     <b-modal id="modal-PopPap" ref="modalConfirmacao" size="sm" class="modalPopPap">                  
                  
       <b-col class="modalContentPopPap">
-        <label class="modalContentPopPapText">Solicitação cadastrada com Sucesso!</label> 
+        <label class="modalContentPopPapText">Andamento Editado com Sucesso!</label> 
       </b-col>
       <template v-slot:modal-footer="{ ok }" class="footerModalPopPap">
         <b-col class="divModalBotaoContinuar" @click="ok()">
-            <b-button class="modalBotaoContinuar" @click="onReset" :to="{name: 'pageInicial'}">
+            <b-button class="modalBotaoContinuar" :to="{name: 'pageInicial'}">
               Continuar
             </b-button>                    
         </b-col>
@@ -67,7 +66,7 @@
       </b-col>
       <template v-slot:modal-footer="{ ok }" class="footerModalPopPap">
         <b-col class="divModalBotaoContinuar" @click="ok()">
-            <b-button class="modalBotaoContinuar" @click="onReset">
+            <b-button class="modalBotaoContinuar" >
               Continuar
             </b-button>                    
         </b-col>
@@ -79,10 +78,11 @@
 </template>
 <script>
 import Header from "../components/header";
-import SolicitacaoClienteServe from "@/api/solicitacao/apiSolicitacao";
+import AndamentoClienteServe from"@/api/andamento/apiAndamento";
 export default {
     mounted() {
-    Header;
+        Header;
+        this.pegarSolicitacao();
     },
     components: {
     Header    
@@ -90,44 +90,25 @@ export default {
 
     data() {
         return {
-            nomeSolicitacao: null,
+            dataAndamento: null,
             text: null,
-            mensagemErro:""
+            mensagemErro:"",
+            idAndamento:"",
+            IdSolicitacao:""
         }
     },
 
     methods:{
-        onReset(evt) {
-            evt.preventDefault()
-            // Reset our form values
-            this.nomeSolicitacao = null,
-            this.text = null,
         
-            this.$nextTick(() => {
-            this.show = true
-            })
-        },
+        async onSubmit(){ 
 
-        async onSubmit(){            
-            
-            if( this.nomeSolicitacao === null && this.text === null){
-            //Chamando o modal de erro
-                this.mensagemErro = "Não foi selecionado nenhum campo!"
-                this.$refs['modalConfirmacaoErro'].show()
-                return;
-            }  
-
-            var dataAtual = new Date();
-             
-
-            var solicitacao = {
-               Solicitante: this.nomeSolicitacao,
-               DataCadastro: dataAtual.getFullYear()+'-'+(dataAtual.getMonth()+1)+'-'+dataAtual.getDate(),
-               Status: 0,
-               TextoSolicitacao: this.text
+            var andamento = {
+               DataAndamento: this.dataAndamento,               
+               Descricao: this.text,
+               SolicitacaoId: this.IdSolicitacao
             }
             //debugger
-            SolicitacaoClienteServe.Salvar(solicitacao)
+            AndamentoClienteServe.Editar(this.idAndamento, andamento)
             .then(resposta => { 
             console.log(resposta);
             
@@ -145,7 +126,45 @@ export default {
             })
         },
 
-        
+        pegarSolicitacao(){      
+            this.idAndamento = this.$route.query.id;
+            console.log(this.idAndamento);
+
+            AndamentoClienteServe.getSelectId(this.idAndamento)
+            .then(resposta => {        
+
+                console.log(resposta); 
+
+                this.IdSolicitacao = resposta.data.solicitacao.id           
+                
+                this.dataAndamento = this.organizarData(resposta.data.dataAndamento, true);
+                this.text = resposta.data.descricao;
+            })
+            .catch(resposta => {
+            console.log(resposta);            
+            })
+
+        },
+
+        organizarData(d, isData) {
+            var dataSplit = String(d).split("T");
+            var data = dataSplit[0];
+            var time = dataSplit[1];
+
+            if (isData) {
+                var ano = String(data).split("-")[0];
+                var mes = String(data).split("-")[1];
+                var dia = String(data).split("-")[2];
+
+                return `${dia}/${mes}/${ano}`;
+                //return `${ano}/${mes}/${dia}`;
+            } else {
+                var hora = String(time).split(":")[0];
+                var minuto = String(time).split(":")[1];
+
+                return `${hora}:${minuto}`;
+            }
+        },
 
 
     }

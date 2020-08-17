@@ -32,6 +32,24 @@ const router = new Router({
           rule: "public",
         },
       },
+
+      {
+        name: 'editarAndamento',
+        path: "/editarAndamento",
+        component: () => import("./pages/editarAndamento.vue"),
+        meta: {
+          rule: "public",
+        },
+      },
+
+      {
+        name: 'cadastrarAndamento',
+        path: "/cadastrarAndamento",
+        component: () => import("./pages/cadastrarAndamento.vue"),
+        meta: {
+          rule: "public",
+        },
+      },
   
     ]       
   });
